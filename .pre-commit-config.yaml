@@ -1,0 +1,56 @@
+repos:
+  - repo: local
+    hooks:
+      - id: isort
+        name: isort
+        stages: [commit]
+        language: system
+        entry: pipenv run isort
+        types: [python]
+
+      - id: black
+        name: black
+        stages: [commit]
+        language: system
+        entry: pipenv run black 
+        types: [python]
+
+      - id: flake8
+        name: flake8
+        stages: [commit]
+        language: system
+        entry: pipenv run flake8
+        types: [python]
+        exclude: setup.py
+
+      - id: mypy
+        name: mypy
+        stages: [commit]
+        language: system
+        entry: pipenv run mypy
+        types: [python]
+        pass_filenames: false
+
+      - id: bandit
+        name: bandit
+        stages: [commit]
+        language: system
+        entry: pipenv run bandit -x ComDirectStockPDFParser/tests -ll
+
+      - id: pytest
+        name: pytest
+        stages: [commit]
+        language: system
+        entry: pipenv run pytest
+        types: [python]
+        pass_filenames: false
+
+      - id: pytest-cov
+        name: pytest
+        stages: [push]
+        language: system
+        entry: pipenv run pytest --cov --cov-report term-missing --cov-fail-under=60
+        types: [python]
+        pass_filenames: false
+
+# use git commit --no-verify or git push --no-verify

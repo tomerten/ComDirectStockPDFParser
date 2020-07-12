@@ -1,0 +1,8 @@
+black
+isort
+mypy
+flake8
+bandit
+pytest
+pytest-cov
+requests-mock # for mocking downloads with requests
