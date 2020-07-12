@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+
 def fib(n: int) -> int:
     if n < 2:
         return n
