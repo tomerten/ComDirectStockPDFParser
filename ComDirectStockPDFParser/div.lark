@@ -1,0 +1,97 @@
+// ComDirect PDF Dividendengutschrift grammar
+
+%ignore /\,/
+%ignore /\-/
+%ignore /\:/
+%ignore /\//
+%ignore /[\(\)\*]/
+%ignore /\)\./
+%ignore /§/
+%ignore /[ \t\f]/+       // ingore whitespace
+%ignore WS
+%import common (SIGNED_INT, SIGNED_FLOAT, SIGNED_NUMBER, ESCAPED_STRING, CNAME, WS
+
+int         : SIGNED_INT
+float       : SIGNED_FLOAT
+word        : /\w+/
+
+start       : _NEWLINE* (inputline _NEWLINE)* 
+_NEWLINE    : /[ \t\f]*\r?\n[ \t\f]*/
+_CURRENCY   : ["AED" | "ARS" | "AUD" | "BDT" | "BGN"| "BRL"| "CAD"
+        | "CHF" | "CNY" | "COP"| "CZK"| "DKK"| "EGP"| "EUR"| "GBP"| "GEL"| "GHS"| "HKD"
+        | "HUF" | "IDR" | "ILS"| "INR"| "JMD"| "JPY"| "KRW"| "KWD"| "KZT"
+        | "MAD" | "MXN" | "MYR"| "NGN"| "NOK"| "NZD"| "OMR"| "PEN"| "PHP"
+        | "PKR" | "PLN" | "RON"| "RUB"| "SAR"| "SEK"| "SGD"| "THB"| "TRY"
+        | "TWD" | "UAH" | "USD"| "VND"| "ZAR"] 
+?inputline  : forex
+
+forex       : /zum Devisenkurs/  _CURRENCY _CURRNECY * forexrate netto 
+
+block : (forex 
+    | depotnr 
+    | stockinfo 
+    | accountnr 
+    | bruttoprice 
+    | sourcetax 
+    | nettoprice
+    | word 
+    | endword 
+    | date 
+    | taxprice
+    | stuckprice)*
+    
+    _currency   : ["AED" | "ARS" | "AUD" | "BDT" | "BGN"| "BRL"| "CAD"
+        | "CHF" | "CNY" | "COP"| "CZK"| "DKK"| "EGP"| "EUR"| "GBP"| "GEL"| "GHS"| "HKD"
+        | "HUF" | "IDR" | "ILS"| "INR"| "JMD"| "JPY"| "KRW"| "KWD"| "KZT"
+        | "MAD" | "MXN" | "MYR"| "NGN"| "NOK"| "NZD"| "OMR"| "PEN"| "PHP"
+        | "PKR" | "PLN" | "RON"| "RUB"| "SAR"| "SEK"| "SGD"| "THB"| "TRY"
+        | "TWD" | "UAH" | "USD"| "VND"| "ZAR"]
+    
+    !cur        : ["AED" | "ARS" | "AUD" | "BDT" | "BGN"| "BRL"| "CAD"
+        | "CHF" | "CNY" | "COP"| "CZK"| "DKK"| "EGP"| "EUR"| "GBP"| "GEL"| "GHS"| "HKD"
+        | "HUF" | "IDR" | "ILS"| "INR"| "JMD"| "JPY"| "KRW"| "KWD"| "KZT"
+        | "MAD" | "MXN" | "MYR"| "NGN"| "NOK"| "NZD"| "OMR"| "PEN"| "PHP"
+        | "PKR" | "PLN" | "RON"| "RUB"| "SAR"| "SEK"| "SGD"| "THB"| "TRY"
+        | "TWD" | "UAH" | "USD"| "VND"| "ZAR"]
+        
+    forex       : /[ \t\f]*zum Devisenkurs/ cur cur * forexrate netto 
+    forexrate   : /[0-9]+,[0-9]+/
+    netto       : value
+   
+    depotnr     : "Depotnr." string
+    string      : /(.)+/
+     
+    stockinfo   : "Depotbestand" (word)* registerdate wkn stockname _amount_isin
+    registerdate: /[0-9]+\.[0-9]+\.[0-9]+/
+    wkn         : WORD
+    stockname   : /(.)+/
+    
+    _amount_isin: stk isin
+    stk         : "STK" /[ \t\f]*[^\.][0-9]+\,[0-9]+/
+    isin        : WORD
+    
+    accountnr   : /[A-Z]{2}[0-9]{2}(\s[0-9]{4}){4}\s[0-9]{2}(.)+[^\.]/
+      
+    bruttoprice : "Bruttobetrag" value
+    value       : cur /[0-9]+,[0-9]+/
+    
+    sourcetax   : _float "%" word value
+    nettoprice  : "Ausmachender" word value
+    
+    word        : /\w+/
+    endword     : /\w+\./
+    date        : /[0-9]+\.[0-9]+\.[0-9]+/
+    WORD        : /\w+/
+    
+    stuckprice  : stuckcur stuckval
+    stuckcur    : cur
+    stuckval    : _float
+    _float      : /[0-9]+,[0-9]+/
+    
+    taxprice : "Auf" (word)* "maximal"  cur _float
+    
+    
+    _NEWLINE : /[ \t\f]*\r?\n[ \t\f]*/
+    
+   
+    

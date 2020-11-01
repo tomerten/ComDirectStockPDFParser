@@ -58,7 +58,9 @@ class ComDirectParser:
         self.filelist = self.files.copy()
         for folder in self.folders:
             for file in os.listdir(folder):
-                self.filelist.append(file)
+                # ignore the files starting with dots
+                if not file.startswith("."):
+                    self.filelist.append(os.path.join(folder, file))
 
     def parse(self):
         """
@@ -82,20 +84,22 @@ class ComDirectParser:
                 parsed = {**parsed, **{"Type": self.docuDict[docutype[0]]}}
             else:
                 print(_file)
+                continue
 
             accountDict = self.parse_account(rawText, _doctype)
             parsed = {**parsed, **accountDict}
 
-        if _doctype == "div":
-            parsed = {**parsed, **self.parse_div(rawText, accountDict)}
-            self.divparsed.append(parsed)
-        elif _doctype == "tax":
-            pass
-        #                 parsed = {**parsed, **self.parse_tax(rawText)}
+            if _doctype == "div":
+                parsed = {**parsed, **self.parse_div(rawText, accountDict)}
+                self.divparsed.append(parsed)
 
-        elif _doctype in ["buy", "sell"]:
-            parsed = {**parsed, **self.parse_buysell(rawText, _doctype)}
-            self.buysellparsed.append(parsed)
+            elif _doctype == "tax":
+                parsed = {**parsed, **self.parse_tax(rawText)}
+                self.taxparsed.append(parsed)
+
+            elif _doctype in ["buy", "sell"]:
+                parsed = {**parsed, **self.parse_buysell(rawText, _doctype)}
+                self.buysellparsed.append(parsed)
 
         return self.divparsed, self.buysellparsed, self.taxparsed
 
@@ -306,11 +310,38 @@ class ComDirectParser:
         ]
         parsed = {**parsed, **dict(zip(_priceKeys, _priceVals))}
 
-        print(
-            re.findall(
-                rf"\n\s+(\w+(?:\s[\S+\.]*)+?)[ ]{{2,}}: ({self.CUR})\s+([0-9]*[.]*[0-9]*[,][0-9]*)",
-                rawText,
-            )
-        )
+        # print(
+        #    re.findall(
+        #        rf"\n\s+(\w+(?:\s[\S+\.]*)+?)[ ]{{2,}}: ({self.CUR})\s+([0-9]*[.]*[0-9]*[,][0-9]*)",
+        #        rawText,
+        #    )
+        # )
 
         return parsed
+
+    def parse_tax(self, rawText):
+        parsed = {}
+        # Get Tax Type
+        taxtype = re.findall(f"\nSteuerliche Behandlung:\s+(.*)", rawText)[0]
+
+        if "Dividende" in taxtype:
+            taxtype = "div"
+        elif "verkauf" in taxtype.lower():
+            taxtype = "sell"
+        else:
+            taxtype = "unknown"
+
+        # get reference number to match with Tax document
+        refnr = re.findall(rf"Referenz\S+\s+(\S+)", rawText)[0]
+        values = re.findall(
+            rf"\nZu Ihren Gunsten\s+\S+\s+\S+\s+{self.CUR}\s* ([0-9]*[.]*[0-9]*[,][0-9]*)", rawText
+        )
+        tax_currency = values[0][0]
+
+        parsed["Before Tax"] = stringToNumber(values[0][1])
+        parsed["After Tax"] = stringToNumber(values[1][1])
+        parsed["Total Tax"] = parsed["Before Tax"] - parsed["After Tax"]
+        parsed["Tax Type"] = taxtype
+        parsed["Tax Currency"] = tax_currency
+
+        return {**parsed, **{"Tax Reference Number": refnr}}

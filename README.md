@@ -1,7 +1,7 @@
 ComDirectStockPDFParser
 ==========================
 
-Parser forr comdirect stock related pdf documents to Excel 
+Parser for comdirect stock related pdf documents to Excel 
 
 ----
 This package has been created with `Cookiecutter` together with `@tomerten`_'s

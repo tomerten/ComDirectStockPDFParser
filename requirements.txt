@@ -1,0 +1,14 @@
+numpy
+pandas
+h5py
+fastjsonschema
+click
+tables
+xlsxwriter
+xlrd
+tqdm
+p_tqdm
+pymongo
+termcolor
+requests
+pre-commit
