@@ -310,12 +310,9 @@ class ComDirectParser:
         ]
         parsed = {**parsed, **dict(zip(_priceKeys, _priceVals))}
 
-        # print(
-        #    re.findall(
-        #        rf"\n\s+(\w+(?:\s[\S+\.]*)+?)[ ]{{2,}}: ({self.CUR})\s+([0-9]*[.]*[0-9]*[,][0-9]*)",
-        #        rawText,
-        #    )
-        # )
+        # get Exchange name
+        boerse = re.findall(f"Ausführungsplatz\s+:\s+(.*)", rawText)[0]
+        parsed = {**parsed, **{"Exchange": boerse.strip()}}
 
         return parsed
 
